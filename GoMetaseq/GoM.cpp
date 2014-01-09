@@ -1,7 +1,7 @@
 /*
 licenced by New BSD License
 
-Copyright (c) 1996-2013, devil.tamachan@gmail.com
+Copyright (c) 2014, devil.tamachan@gmail.com
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
