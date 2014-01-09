@@ -49,23 +49,23 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance, DWORD ul_reason_for_call, LPVOID lpRe
   switch(ul_reason_for_call)
   {
   case DLL_PROCESS_ATTACH:
-  {
-    HRESULT hRes = ::CoInitialize(NULL);
-    // If you are running on NT 4.0 or higher you can use the following call instead to 
-    // make the EXE free threaded. This means that calls come in on a random RPC thread.
-    //	HRESULT hRes = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    ATLASSERT(SUCCEEDED(hRes));
+    {
+      HRESULT hRes = ::CoInitialize(NULL);
+      // If you are running on NT 4.0 or higher you can use the following call instead to 
+      // make the EXE free threaded. This means that calls come in on a random RPC thread.
+      //	HRESULT hRes = ::CoInitializeEx(NULL, COINIT_MULTITHREADED);
+      ATLASSERT(SUCCEEDED(hRes));
 
-    // this resolves ATL window thunking problem when Microsoft Layer for Unicode (MSLU) is used
-    ::DefWindowProc(NULL, 0, 0, 0L);
+      // this resolves ATL window thunking problem when Microsoft Layer for Unicode (MSLU) is used
+      ::DefWindowProc(NULL, 0, 0, 0L);
 
-    AtlInitCommonControls(ICC_BAR_CLASSES);	// add flags to support other controls
+      AtlInitCommonControls(ICC_BAR_CLASSES);	// add flags to support other controls
 
-    hRes = _Module.Init(NULL, hInstance);
-    ATLASSERT(SUCCEEDED(hRes));
+      hRes = _Module.Init(NULL, hInstance);
+      ATLASSERT(SUCCEEDED(hRes));
 
-    return SUCCEEDED(hRes);
-  }
+      return SUCCEEDED(hRes);
+    }
   case DLL_PROCESS_DETACH:
     _Module.Term();
     ::CoUninitialize();

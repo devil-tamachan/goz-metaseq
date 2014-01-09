@@ -113,24 +113,24 @@ public:
     fclose(fp);
     return S_OK;
   }
-  
+
 #define WRITEB(val) ucTmp = val;\
-    fwrite(&ucTmp, 1, 1, fp);
+  fwrite(&ucTmp, 1, 1, fp);
 
 #define WRITEUL(val) ulTmp = val;\
-    fwrite(&ulTmp, 4, 1, fp);
+  fwrite(&ulTmp, 4, 1, fp);
 
 #define WRITEULL(val) ullTmp = val;\
-    fwrite(&ullTmp, 8, 1, fp);
+  fwrite(&ullTmp, 8, 1, fp);
 
 #define WRITEF(val) fTmp = val;\
-    fwrite(&fTmp, 4, 1, fp);
+  fwrite(&fTmp, 4, 1, fp);
 
 #define WRITEUV(coord) WRITEF(coord.u);\
-    WRITEF(coord.v);
+  WRITEF(coord.v);
 
 #define WRITEUV0() WRITEF(0.0);\
-    WRITEF(0.0);
+  WRITEF(0.0);
 
   HRESULT ExportObj(MQObject obj, CString strName)
   {
@@ -150,10 +150,10 @@ public:
 
     WRITEUL(lenUtf8Name + 24);
     WRITEULL(1);
-    
+
     const char *chGoZMesh = "GoZMesh_";
     fwrite(chGoZMesh, strlen(chGoZMesh), 1, fp);
-    
+
     fwrite(utf8Name, lenUtf8Name, 1, fp);
 
     WRITEUL(0x00001389);

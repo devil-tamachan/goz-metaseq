@@ -35,21 +35,21 @@ class GoM;
 class CMainDlg : public CDialogImpl<CMainDlg>
 {
 public:
-	enum { IDD = IDD_MAINDLG };
+  enum { IDD = IDD_MAINDLG };
 
-	BEGIN_MSG_MAP(CMainDlg)
-		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+  BEGIN_MSG_MAP(CMainDlg)
+    MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
     MSG_WM_CLOSE(OnClose)
-		COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
-		COMMAND_ID_HANDLER(IDB_GOMETASEQ, OnGoMetaseq)
-		COMMAND_ID_HANDLER(IDB_GOZBRUSH, OnGoZBrush)
-		COMMAND_ID_HANDLER(IDOK, OnOK)
-	END_MSG_MAP()
+    COMMAND_ID_HANDLER(ID_APP_ABOUT, OnAppAbout)
+    COMMAND_ID_HANDLER(IDB_GOMETASEQ, OnGoMetaseq)
+    COMMAND_ID_HANDLER(IDB_GOZBRUSH, OnGoZBrush)
+    COMMAND_ID_HANDLER(IDOK, OnOK)
+  END_MSG_MAP()
 
-// Handler prototypes (uncomment arguments if needed):
-//	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-//	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-//	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
+  // Handler prototypes (uncomment arguments if needed):
+  //	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+  //	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+  //	LRESULT NotifyHandler(int /*idCtrl*/, LPNMHDR /*pnmh*/, BOOL& /*bHandled*/)
 
   GoM *m_plugin;
 
@@ -58,41 +58,41 @@ public:
     m_plugin = plugin;
   }
 
-	LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-	{
-		// center the dialog on the screen
-		CenterWindow();
+  LRESULT OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+  {
+    // center the dialog on the screen
+    CenterWindow();
 
-		// set icons
-		HICON hIcon = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, ::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON));
-		SetIcon(hIcon, TRUE);
-		HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON));
-		SetIcon(hIconSmall, FALSE);
+    // set icons
+    HICON hIcon = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, ::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON));
+    SetIcon(hIcon, TRUE);
+    HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON));
+    SetIcon(hIconSmall, FALSE);
 
-		return TRUE;
-	}
+    return TRUE;
+  }
 
-	LRESULT OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		CSimpleDialog<IDD_ABOUTBOX, FALSE> dlg;
-		dlg.DoModal();
-		return 0;
-	}
+  LRESULT OnAppAbout(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+  {
+    CSimpleDialog<IDD_ABOUTBOX, FALSE> dlg;
+    dlg.DoModal();
+    return 0;
+  }
 
-	LRESULT OnOK(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-	{
-		// TODO: Add validation code 
-		CloseDialog(wID);
-		return 0;
-	}
+  LRESULT OnOK(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+  {
+    // TODO: Add validation code 
+    CloseDialog(wID);
+    return 0;
+  }
 
   void OnClose()
   {
     CloseDialog(0);
   }
 
-	LRESULT OnGoMetaseq(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnGoZBrush(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+  LRESULT OnGoMetaseq(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+  LRESULT OnGoZBrush(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
   void CloseDialog(int nVal);
 };
