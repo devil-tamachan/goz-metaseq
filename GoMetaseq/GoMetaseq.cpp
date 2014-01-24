@@ -61,6 +61,8 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance, DWORD ul_reason_for_call, LPVOID lpRe
 
       AtlInitCommonControls(ICC_BAR_CLASSES);	// add flags to support other controls
 
+      makecrctable1();
+
       hRes = _Module.Init(NULL, hInstance);
       ATLASSERT(SUCCEEDED(hRes));
 

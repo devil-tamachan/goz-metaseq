@@ -92,7 +92,7 @@ public:
       strName.Replace(',', '_');
       strName.Replace('\\', '_');
       obj->SetName(CW2A(strName));
-      if(FAILED(ExportObj(obj, strName)))return;
+      if(FAILED(ExportObj(doc, obj, strName)))return;
       if(FAILED(CreateZtn(strName)))return;
       CString pathName = pathGoZProjects + strName;
       fprintf(fpList, CW2A(pathName));
@@ -114,25 +114,28 @@ public:
     return S_OK;
   }
 
-#define WRITEB(val) ucTmp = val;\
-  fwrite(&ucTmp, 1, 1, fp);
+#define WRITEB(val) { ucTmp = val;\
+  fwrite(&ucTmp, 1, 1, fp); }
 
-#define WRITEUL(val) ulTmp = val;\
-  fwrite(&ulTmp, 4, 1, fp);
+#define WRITEW(val) { usTmp = val;\
+  fwrite(&usTmp, 2, 1, fp); }
 
-#define WRITEULL(val) ullTmp = val;\
-  fwrite(&ullTmp, 8, 1, fp);
+#define WRITEUL(val) { ulTmp = val;\
+  fwrite(&ulTmp, 4, 1, fp); }
 
-#define WRITEF(val) fTmp = val;\
-  fwrite(&fTmp, 4, 1, fp);
+#define WRITEULL(val) { ullTmp = val;\
+  fwrite(&ullTmp, 8, 1, fp);}
 
-#define WRITEUV(coord) WRITEF(coord.u);\
-  WRITEF(coord.v);
+#define WRITEF(val) { fTmp = val;\
+  fwrite(&fTmp, 4, 1, fp); }
 
-#define WRITEUV0() WRITEF(0.0);\
-  WRITEF(0.0);
+#define WRITEUV(coord) { WRITEF(coord.u);\
+  WRITEF(coord.v); }
 
-  HRESULT ExportObj(MQObject obj, CString strName)
+#define WRITEUV0() { WRITEF(0.0);\
+  WRITEF(0.0); }
+
+  HRESULT ExportObj(MQDocument doc, MQObject obj, CString strName)
   {
     CString pathGoZ = pathGoZProjects + strName + ".GoZ";
     const char *GoZHeader10 = "GoZb 1.0 ZBrush GoZ Binary\x2E\x2E\x2E\x2E\x2E\x2E";
@@ -183,12 +186,42 @@ public:
     WRITEUL(ulTmp*4+16);
     WRITEULL(obj->GetVertexCount());
     WriteVColor(fp, obj);
+    
+    WRITEUL(0x00009C41);
+    WRITEUL(numFace*2+16);
+    WRITEULL(numFace);
+    WritePolygroup(fp, doc, obj);
 
     for(int i=0; i<16; i++) fputc(0, fp);
 
     fclose(fp);
 
     return S_OK;
+  }
+
+  WORD CalcCRC16(MQMaterial mat)
+  {
+    char name[255];
+    mat->GetName(name, 254);
+    size_t lenName = strlen(name);
+    return (WORD)crc1(lenName, (byte *)name);
+  }
+
+#define NOMAT 0x2a95
+  void WritePolygroup(FILE *fp, MQDocument doc, MQObject obj)
+  {
+    unsigned short usTmp;
+    for(int i=0; i<obj->GetFaceCount(); i++)
+    {
+      int iMat = obj->GetFaceMaterial(i);
+      if(iMat==-1)
+      {
+        WRITEW(NOMAT);
+      } else {
+        MQMaterial mat = doc->GetMaterial(iMat);
+        WRITEW(CalcCRC16(mat));
+      }
+    }
   }
 
 #define GETR(rgba) ((BYTE)(rgba & 0xFF))
@@ -221,7 +254,7 @@ public:
           cols[iCols] = GETB(rgba);
           cols[iCols+1] = GETG(rgba);
           cols[iCols+2] = GETR(rgba);
-          cols[iCols+3] = 0;//GETA(rgba);
+          cols[iCols+3] = 0;//GETA(rgba); Colorizeの強さ? 10以上だとShaderじゃなくて頂点色がそのまま着色される。255だとまさにフラットシェーダー
         }
         delete [] vertexIndex;
       }

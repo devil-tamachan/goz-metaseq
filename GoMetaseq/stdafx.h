@@ -48,6 +48,7 @@ extern CAppModule _Module;
 #include <atlcrack.h>
 
 #include "resource.h"
+#include "crc16t.h"
 
 #include <MQBasePlugin.h>
 

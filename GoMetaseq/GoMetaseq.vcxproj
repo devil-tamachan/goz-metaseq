@@ -185,7 +185,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ExceptionHandling>
@@ -216,6 +216,7 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="crc16t.c" />
     <ClCompile Include="GoM.cpp" />
     <ClCompile Include="GoMetaseq.cpp" />
     <ClCompile Include="MainDlg.cpp" />
@@ -227,6 +228,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="crc16t.h" />
     <ClInclude Include="GoM.h" />
     <ClInclude Include="MainDlg.h" />
     <ClInclude Include="resource.h" />
