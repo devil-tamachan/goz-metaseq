@@ -65,7 +65,14 @@ BOOL GoM::Activate(MQDocument doc, BOOL flag)
   if(m_dlgMain==NULL)return FALSE;
 
   m_bShowDlgMain = flag;
-  m_dlgMain->ShowWindow(m_bShowDlgMain ? SW_SHOW : SW_HIDE);
+  //m_dlgMain->ShowWindow(m_bShowDlgMain ? SW_SHOW : SW_HIDE);
+  if(m_bShowDlgMain)
+  {
+    //m_dlgMain->ShowWindow(SW_SHOW);
+    m_dlgMain->SetWindowPos(HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|/*SWP_NOACTIVATE|*/SWP_SHOWWINDOW);
+  } else {
+    m_dlgMain->ShowWindow(SW_HIDE);
+  }
   return m_bShowDlgMain;
 }
 
