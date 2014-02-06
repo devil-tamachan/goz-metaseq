@@ -95,7 +95,7 @@ public:
       if(FAILED(ExportObj(doc, obj, strName)))return;
       if(FAILED(CreateZtn(strName)))return;
       CString pathName = pathGoZProjects + strName;
-      fprintf(fpList, CW2A(pathName));
+      fprintf(fpList, CW2A(pathName+_T("\n")));
     }
     fclose(fpList);
     ShellExecute(NULL, _T("open"), pathGoZFromApp, NULL, NULL, SW_SHOWDEFAULT);
