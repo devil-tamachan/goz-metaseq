@@ -74,10 +74,249 @@ public:
     return (m_dlgMain==NULL) ? FALSE : m_bShowDlgMain;
   }
 
-  void ImportGoZ(MQDocument doc)
+  void ImportGoZ(MQDocument doc, MYCALLBACKOPT *opt)
   {
+    FILE *fpList = fopen(pathGoZ_ObjectList, "r");
+    if(!fpList)return;
+
+    Cleanup4Import(doc, opt);
+
+    char objPath[1024+4+2];
+    while(fgets(objPath, 1024, fpList))
+    {
+      CStringA objNameOrig = PathFindFileNameA(objPath);
+      CStringA objName;
+      doc->GetUnusedObjectName(objName.GetBuffer(256+2), 256, objNameOrig);
+      objName.ReleaseBuffer();
+      MQObject obj = MQ_CreateObject();
+     // obj->SetName(objName);
+      CStringA gozPath = objPath;
+      gozPath.TrimRight();
+      gozPath += ".GoZ";
+      ATLTRACE(gozPath);
+      if(SUCCEEDED(ImportObj(doc, obj, gozPath, opt)))doc->AddObject(obj);
+      else obj->DeleteThis();
+    }
+    fclose(fpList);
+    UpdateUndo();
+    RedrawAllScene();
+    MQ_RefreshView(NULL);
   }
-  void ExportGoZ(MQDocument doc)
+
+  void Cleanup4Import(MQDocument doc, MYCALLBACKOPT *opt)
+  {
+    int numObj = doc->GetObjectCount();
+    for(int i=0; i<numObj; i++)
+    {
+      if(doc->GetObject(i))doc->DeleteObject(i);
+    }
+    if(opt->mergeMat)
+    {
+      int numMat = doc->GetMaterialCount();
+      for(int i=0;i<numMat;i++)
+      {
+        if(doc->GetMaterial(i))doc->DeleteMaterial(i);
+      }
+#ifdef _DEBUG
+      numMat = doc->GetMaterialCount();
+      for(int i=0;i<numMat;i++)
+      {
+        ATLTRACE(_T("DEBUG(Material-%d): 0x%08X\n"), i, doc->GetMaterial(i));
+      }
+#endif
+    }
+  }
+
+#define FPOS(pos)  { if(fseek(fp, pos, SEEK_SET))goto IOB_Err1; }
+#define FSKIP(pos) { if(fseek(fp, pos, SEEK_CUR))goto IOB_Err1; }
+#define FSKIP4()   { if(fseek(fp, 4,   SEEK_CUR))goto IOB_Err1; }
+#define FSKIP8()   { if(fseek(fp, 8,   SEEK_CUR))goto IOB_Err1; }
+  
+#define READB(ret) { if(fread(&ucTmp, 1, 1, fp)!=1)goto IOB_Err1; \
+    ret = ucTmp; }
+#define READUL(ret) { if(fread(&ulTmp, 4, 1, fp)!=1)goto IOB_Err1; \
+    ret = ulTmp; }
+#define READULL(ret) { if(fread(&ullTmp, 8, 1, fp)!=1)goto IOB_Err1; \
+    ret = ullTmp; }
+#define READF(ret) { if(fread(&fTmp, 4, 1, fp)!=1)goto IOB_Err1; \
+    ret = fTmp; }
+
+#define READUV(coord) { READF(coord.u);\
+  READF(coord.v); }
+
+
+  HRESULT ImportObj(MQDocument doc, MQObject obj, LPCSTR gozPath, MYCALLBACKOPT *opt)
+  {
+    FILE *fp = fopen(gozPath, "rb");
+    if(!fp)return E_FAIL;
+    FPOS(36);
+
+    unsigned char ucTmp;
+    unsigned int ulTmp;
+    unsigned long long ullTmp;
+    float fTmp;
+
+    unsigned int lenUtf8Name = 0;
+
+    READUL(lenUtf8Name);
+    lenUtf8Name -= 16;
+    FSKIP8();
+
+    {
+      CStringA utf8Name;
+      if(fread(utf8Name.GetBuffer(lenUtf8Name), lenUtf8Name, 1, fp)!=1)goto IOB_Err1;
+      utf8Name.ReleaseBuffer(lenUtf8Name);
+      CString objName = CA2W(utf8Name, CP_UTF8);
+      objName = objName.Right(objName.GetLength()-8);
+      obj->SetName(CW2A(objName));
+      ATLTRACE(_T("Import: ")+objName+_T("\n"));
+    }
+
+    unsigned int ulTag = 0;
+    READUL(ulTag);
+
+    while(ulTag)
+    {
+#ifdef _DEBUG
+      CString dbg;
+      dbg.Format(_T("Import tag: 0x%08X\n"), ulTag);
+      ATLTRACE(dbg);
+#endif
+      switch(ulTag)
+      {
+      case 0x00001389: //Skip
+        {
+          unsigned long s = 0;
+          READUL(s);//ChunkSize
+          s-=8;
+          FSKIP(s);
+          break;
+        }
+      case 0x00002711:
+        {
+          FSKIP4();//ChunkSize
+          unsigned __int64 numVertex = 0;
+          READULL(numVertex);
+          MQPoint pt;
+          for(unsigned __int64 i=0; i < numVertex; i++)
+          {
+            if(i>0x5FFFffff)goto IOB_Err1;
+            READF(pt.x);pt.x *= 100.0f;
+            READF(pt.y);pt.y *= -100.0f;
+            READF(pt.z);pt.z *= -100.0f;
+            obj->AddVertex(pt);
+          }
+          break;
+        }
+      case 0x00004E21:
+        {
+          FSKIP4();//ChunkSize
+          unsigned __int64 numFace = 0;
+          READULL(numFace);
+          unsigned int idx[4];
+          for(unsigned __int64 i=0; i < numFace; i++)
+          {
+            if(i>0x5FFFffff)goto IOB_Err1;
+            READUL(idx[3]);
+            READUL(idx[2]);
+            READUL(idx[1]);
+            READUL(idx[0]);
+            if(idx[0]==0xFFFFffff)obj->AddFace(3, (int *)&idx[1]);
+            else obj->AddFace(4, (int *)idx);
+          }
+          break;
+        }
+      case 0x000061A9:
+        {
+          FSKIP4();//ChunkSize
+          unsigned __int64 numUV = 0;
+          READULL(numUV);
+          MQCoordinate uvs[4];
+          for(unsigned __int64 i=0; i < numUV; i++)
+          {
+            if(i>0x5FFFffff)goto IOB_Err1;
+            READUV(uvs[0]);
+            READUV(uvs[1]);
+            READUV(uvs[2]);
+            READUV(uvs[3]);
+            obj->SetFaceCoordinateArray((int)i, uvs);
+          }
+          break;
+        }
+      case 0x000088b9:
+        {
+          FSKIP4();//ChunkSize
+          unsigned __int64 numVColor = 0;
+          READULL(numVColor);
+          unsigned int numVert = obj->GetVertexCount();
+          ATLASSERT(numVert==numVColor);
+          CAtlArray<DWORD> arrVColor;
+          //arrVColor.SetCount(numVert);
+          DWORD rgba;
+          for(unsigned __int64 i=0; i < numVert; i++)
+          {
+            if(i>0x5FFFffff)goto IOB_Err1;
+            DWORD r,g,b;
+            READB(b);
+            b<<=16;
+            READB(g);
+            g<<=8;
+            READB(r);
+            FSKIP(1);
+            rgba = 0xFF000000 | r | g | b;
+            arrVColor.Add(rgba);
+          }
+          ATLASSERT(arrVColor.GetCount()==numVert);
+          for(int i=0; i<obj->GetFaceCount(); i++)
+          {
+            int vCount = obj->GetFacePointCount(i);
+            if(vCount >= 3)
+            {
+              int *vertexIndex = new int[vCount];
+              obj->GetFacePointArray(i, vertexIndex);
+              for(int j=0; j<vCount; j++)
+              {
+                obj->SetFaceVertexColor(i, j, rgba);
+              }
+              delete [] vertexIndex;
+            }
+          }
+          break;
+        }
+      //case 0x00007532:
+      //case 0x00009C41:
+      //case 0:
+      default:
+        {
+          unsigned int s=0;
+          READUL(s);
+          s-=8;
+          if(s<0)goto IOB_Err1;
+          FSKIP(s);
+          break;
+        }
+      }
+      READUL(ulTag);
+    }
+    /*
+    WRITEUL(0x00009C41);
+    WRITEUL(numFace*2+16);
+    WRITEULL(numFace);
+    WritePolygroup(fp, doc, obj);
+
+    for(int i=0; i<16; i++) fputc(0, fp);
+    */
+
+    fclose(fp);
+    return S_OK;
+
+IOB_Err1:
+    fclose(fp);
+    MessageBox(NULL, _T(".GoZ Read Error"), _T("Error"), MB_OK);
+    return E_FAIL;
+  }
+
+  void ExportGoZ(MQDocument doc, MYCALLBACKOPT *opt)
   {
     FILE *fpList = fopen(pathGoZ_ObjectList, "wt");
     if(!fpList)return;
@@ -92,7 +331,7 @@ public:
       strName.Replace(',', '_');
       strName.Replace('\\', '_');
       obj->SetName(CW2A(strName));
-      if(FAILED(ExportObj(doc, obj, strName)))return;
+      if(FAILED(ExportObj(doc, obj, strName, opt)))return;
       if(FAILED(CreateZtn(strName)))return;
       CString pathName = pathGoZProjects + strName;
       fprintf(fpList, CW2A(pathName+_T("\n")));
@@ -135,7 +374,7 @@ public:
 #define WRITEUV0() { WRITEF(0.0);\
   WRITEF(0.0); }
 
-  HRESULT ExportObj(MQDocument doc, MQObject obj, CString strName)
+  HRESULT ExportObj(MQDocument doc, MQObject obj, CString strName, MYCALLBACKOPT *opt)
   {
     CString pathGoZ = pathGoZProjects + strName + ".GoZ";
     const char *GoZHeader10 = "GoZb 1.0 ZBrush GoZ Binary\x2E\x2E\x2E\x2E\x2E\x2E";
@@ -415,8 +654,10 @@ public:
 protected:
   virtual bool ExecuteCallback(MQDocument doc, void *option)
   {
-    if(option==0)ImportGoZ(doc);
-    else ExportGoZ(doc);
+    MYCALLBACKOPT *opt = (MYCALLBACKOPT *)option;
+    if(opt->bImport)ImportGoZ(doc, opt);
+    else ExportGoZ(doc, opt);
+    free(opt);
     return false;
   }
 };

@@ -43,14 +43,23 @@ void CMainDlg::CloseDialog(int nVal)
 
 LRESULT CMainDlg::OnGoMetaseq(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-  m_plugin->BeginCallback((void*)0);
+  DoDataExchange(DDX_SAVE);
+  MYCALLBACKOPT *opt = (MYCALLBACKOPT*)malloc(sizeof(MYCALLBACKOPT));
+  opt->bImport = true;
+  opt->mergeMat = m_mergeMat;
+  m_plugin->BeginCallback((void*)opt);
   CloseDialog(wID);
   return 0;
 }
 
 LRESULT CMainDlg::OnGoZBrush(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-  m_plugin->BeginCallback((void*)1);
+  DoDataExchange(DDX_SAVE);
+  MYCALLBACKOPT *opt = (MYCALLBACKOPT*)malloc(sizeof(MYCALLBACKOPT));
+  opt->bImport = false;
+  opt->freeze_patch = m_freeze_patch;
+  opt->freeze_mirror = m_freeze_mirror;
+  m_plugin->BeginCallback((void*)opt);
   CloseDialog(wID);
   return 0;
 }

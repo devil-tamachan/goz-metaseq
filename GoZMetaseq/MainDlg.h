@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "GoM.h"
 class GoM;
 
-class CMainDlg : public CDialogImpl<CMainDlg>
+class CMainDlg : public CDialogImpl<CMainDlg>, public CWinDataExchange<CMainDlg>
 {
 public:
   enum { IDD = IDD_MAINDLG };
@@ -46,6 +46,16 @@ public:
     COMMAND_ID_HANDLER(IDOK, OnOK)
   END_MSG_MAP()
 
+  BEGIN_DDX_MAP(CMainDlg)
+    DDX_CHECK(IDC_FREEZE_PATCH, m_freeze_patch)
+    DDX_CHECK(IDC_FREEZE_MIRROR, m_freeze_mirror)
+    DDX_CHECK(IDC_MERGEMAT, m_mergeMat)
+  END_DDX_MAP()
+
+  bool m_freeze_patch;
+  bool m_freeze_mirror;
+  bool m_mergeMat;
+
   // Handler prototypes (uncomment arguments if needed):
   //	LRESULT MessageHandler(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
   //	LRESULT CommandHandler(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -53,7 +63,7 @@ public:
 
   GoM *m_plugin;
 
-  CMainDlg(GoM *plugin)
+  CMainDlg(GoM *plugin) : m_freeze_patch(true), m_freeze_mirror(true), m_mergeMat(true)
   {
     m_plugin = plugin;
   }
@@ -68,6 +78,8 @@ public:
     SetIcon(hIcon, TRUE);
     HICON hIconSmall = AtlLoadIconImage(IDR_MAINFRAME, LR_DEFAULTCOLOR, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON));
     SetIcon(hIconSmall, FALSE);
+
+    DoDataExchange(DDX_LOAD);
 
     return TRUE;
   }
