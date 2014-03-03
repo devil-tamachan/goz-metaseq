@@ -98,33 +98,31 @@ public:
       else obj->DeleteThis();
     }
     fclose(fpList);
+    doc->Compact();
     UpdateUndo();
     RedrawAllScene();
-    MQ_RefreshView(NULL);
   }
 
-  void Cleanup4Import(MQDocument doc, MYCALLBACKOPT *opt)
+  void AllClearObj(MQDocument doc)
   {
     int numObj = doc->GetObjectCount();
     for(int i=0; i<numObj; i++)
     {
       if(doc->GetObject(i))doc->DeleteObject(i);
     }
-    if(opt->mergeMat)
+  }
+  void AllClearMat(MQDocument doc)
+  {
+    int numMat = doc->GetMaterialCount();
+    for(int i=0;i<numMat;i++)
     {
-      int numMat = doc->GetMaterialCount();
-      for(int i=0;i<numMat;i++)
-      {
-        if(doc->GetMaterial(i))doc->DeleteMaterial(i);
-      }
-#ifdef _DEBUG
-      numMat = doc->GetMaterialCount();
-      for(int i=0;i<numMat;i++)
-      {
-        ATLTRACE(_T("DEBUG(Material-%d): 0x%08X\n"), i, doc->GetMaterial(i));
-      }
-#endif
+      if(doc->GetMaterial(i))doc->DeleteMaterial(i);
     }
+  }
+  void Cleanup4Import(MQDocument doc, MYCALLBACKOPT *opt)
+  {
+    AllClearObj(doc);
+    if(opt->mergeMat)AllClearMat(doc);
   }
 
 #define FPOS(pos)  { if(fseek(fp, pos, SEEK_SET))goto IOB_Err1; }
@@ -452,13 +450,20 @@ IOB_Err1:
     unsigned short usTmp;
     for(int i=0; i<obj->GetFaceCount(); i++)
     {
-      int iMat = obj->GetFaceMaterial(i);
-      if(iMat==-1)
+      int vCount = obj->GetFacePointCount(i);
+      if(vCount >= 3)
       {
-        WRITEW(NOMAT);
-      } else {
-        MQMaterial mat = doc->GetMaterial(iMat);
-        WRITEW(CalcCRC16(mat));
+        int numRect = (vCount-2)/2;
+        int numTri = (vCount-2)%2;
+        int numFace = numRect + numTri;
+        int iMat = obj->GetFaceMaterial(i);
+        if(iMat==-1)
+        {
+          for(int j=0;j<numFace;j++)WRITEW(NOMAT);
+        } else {
+          MQMaterial mat = doc->GetMaterial(iMat);
+          for(int j=0;j<numFace;j++)WRITEW(CalcCRC16(mat));
+        }
       }
     }
   }
@@ -658,6 +663,6 @@ protected:
     if(opt->bImport)ImportGoZ(doc, opt);
     else ExportGoZ(doc, opt);
     free(opt);
-    return false;
+    return true;
   }
 };
