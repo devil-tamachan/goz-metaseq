@@ -61,6 +61,9 @@ typedef struct {
   bool bImport;
   bool freeze_patch;
   bool freeze_mirror;
+  bool freeze_lathe;
+  bool selectedonly;
+  bool export_mergeObj;
   bool mergeMat;
 } MYCALLBACKOPT;
 

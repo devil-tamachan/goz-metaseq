@@ -59,6 +59,9 @@ LRESULT CMainDlg::OnGoZBrush(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, B
   opt->bImport = false;
   opt->freeze_patch = m_freeze_patch;
   opt->freeze_mirror = m_freeze_mirror;
+  opt->freeze_lathe = m_freeze_lathe;
+  opt->selectedonly = m_selectedonly;
+  opt->export_mergeObj = m_export_mergeObj;
   m_plugin->BeginCallback((void*)opt);
   CloseDialog(wID);
   return 0;

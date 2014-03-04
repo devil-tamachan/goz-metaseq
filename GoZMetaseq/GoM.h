@@ -44,6 +44,8 @@ public:
   CMainDlg *m_dlgMain;
   BOOL m_bShowDlgMain;
 
+  CAtlMap<WORD, int> m_matCrcList;
+
   GoM()
   {
     m_dlgMain = NULL;
@@ -74,12 +76,39 @@ public:
     return (m_dlgMain==NULL) ? FALSE : m_bShowDlgMain;
   }
 
+  void MakeMaterialCRCList(MQDocument doc)
+  {
+    int numMat = doc->GetMaterialCount();
+    if(numMat > 0)
+    {
+      for(int i=numMat-1;i>=0;i--)
+      {
+        MQMaterial mat = doc->GetMaterial(i);
+        WORD crc16 = CalcCRC16(mat);
+        m_matCrcList.SetAt(crc16, mat->GetUniqueID());
+      }
+    }
+  }
+
+  int GetMaterialIndexFromUniqueID(MQDocument doc, int uniqid)
+  {
+    int numMat = doc->GetMaterialCount();
+    for(int i=0;i<numMat;i++)
+    {
+      MQMaterial mat = doc->GetMaterial(i);
+      if(mat->GetUniqueID()==uniqid)return i;
+    }
+    return 0;//Err
+  }
+
   void ImportGoZ(MQDocument doc, MYCALLBACKOPT *opt)
   {
     FILE *fpList = fopen(pathGoZ_ObjectList, "r");
     if(!fpList)return;
 
-    Cleanup4Import(doc, opt);
+    MakeMaterialCRCList(doc);
+
+    //Cleanup4Import(doc, opt);
 
     char objPath[1024+4+2];
     while(fgets(objPath, 1024, fpList))
@@ -122,7 +151,7 @@ public:
   void Cleanup4Import(MQDocument doc, MYCALLBACKOPT *opt)
   {
     AllClearObj(doc);
-    if(opt->mergeMat)AllClearMat(doc);
+    if(!opt->mergeMat)AllClearMat(doc);
   }
 
 #define FPOS(pos)  { if(fseek(fp, pos, SEEK_SET))goto IOB_Err1; }
@@ -132,6 +161,8 @@ public:
   
 #define READB(ret) { if(fread(&ucTmp, 1, 1, fp)!=1)goto IOB_Err1; \
     ret = ucTmp; }
+#define READW(ret) { if(fread(&usTmp, 2, 1, fp)!=1)goto IOB_Err1; \
+    ret = usTmp; }
 #define READUL(ret) { if(fread(&ulTmp, 4, 1, fp)!=1)goto IOB_Err1; \
     ret = ulTmp; }
 #define READULL(ret) { if(fread(&ullTmp, 8, 1, fp)!=1)goto IOB_Err1; \
@@ -150,6 +181,7 @@ public:
     FPOS(36);
 
     unsigned char ucTmp;
+    WORD usTmp;
     unsigned int ulTmp;
     unsigned long long ullTmp;
     float fTmp;
@@ -200,8 +232,8 @@ public:
           {
             if(i>0x5FFFffff)goto IOB_Err1;
             READF(pt.x);pt.x *= 100.0f;
-            READF(pt.y);pt.y *= -100.0f;
-            READF(pt.z);pt.z *= -100.0f;
+            READF(pt.y);pt.y *= 100.0f;
+            READF(pt.z);pt.z *= 100.0f;
             obj->AddVertex(pt);
           }
           break;
@@ -281,8 +313,22 @@ public:
           }
           break;
         }
+      case 0x00009C41:
+        {
+          FSKIP4();//ChunkSize
+          unsigned __int64 numFace = 0;
+          READULL(numFace);
+          WORD matID;
+          for(unsigned __int64 i=0; i < numFace; i++)
+          {
+            if(i>0x5FFFffff)goto IOB_Err1;
+            READW(matID);
+            CAtlMap<WORD, int>::CPair *pPair = m_matCrcList.Lookup(matID);
+            if(pPair)obj->SetFaceMaterial(i, GetMaterialIndexFromUniqueID(doc, pPair->m_value));
+          }
+          break;
+        }
       //case 0x00007532:
-      //case 0x00009C41:
       //case 0:
       default:
         {
@@ -319,9 +365,23 @@ IOB_Err1:
     FILE *fpList = fopen(pathGoZ_ObjectList, "wt");
     if(!fpList)return;
 
+    if(opt->export_mergeObj)
+      _ExportGoZMergeAll(doc, opt, fpList);
+    else 
+      _ExportGoZSplit(doc, opt, fpList);
+    fclose(fpList);
+    ShellExecute(NULL, _T("open"), pathGoZFromApp, NULL, NULL, SW_SHOWDEFAULT);
+    UpdateUndo();
+    RedrawAllScene();
+  }
+
+  void _ExportGoZSplit(MQDocument doc, MYCALLBACKOPT *opt, FILE *fpList)
+  {
     for(int i=0; i < doc->GetObjectCount(); i++)
     {
       MQObject obj = doc->GetObject(i);
+      if(obj==NULL)continue;
+      if(opt->selectedonly && !obj->GetSelected())continue;
       char chName[201] = {0};
       obj->GetName(chName, 200);
       CString strName = chName;
@@ -329,15 +389,72 @@ IOB_Err1:
       strName.Replace(',', '_');
       strName.Replace('\\', '_');
       obj->SetName(CW2A(strName));
-      if(FAILED(ExportObj(doc, obj, strName, opt)))return;
+      {
+        HRESULT hr = E_FAIL;
+        if(opt->freeze_patch || opt->freeze_mirror || opt->freeze_lathe)
+        {
+          MQObject objFreezed = obj->Clone();
+          DWORD freezeFlag = 0;
+          if(opt->freeze_patch)freezeFlag |= MQOBJECT_FREEZE_PATCH;
+          if(opt->freeze_mirror)freezeFlag |= MQOBJECT_FREEZE_MIRROR;
+          if(opt->freeze_lathe)freezeFlag |= MQOBJECT_FREEZE_LATHE;
+          //if(freezeFlag==7)freezeFlag=MQOBJECT_FREEZE_ALL;
+          objFreezed->Freeze(freezeFlag);
+          hr = ExportObj(doc, objFreezed, strName, opt);
+          objFreezed->DeleteThis();
+        } else 
+          hr = ExportObj(doc, obj, strName, opt);
+        if(FAILED(hr))return;
+      }
       if(FAILED(CreateZtn(strName)))return;
       CString pathName = pathGoZProjects + strName;
       fprintf(fpList, CW2A(pathName+_T("\n")));
     }
-    fclose(fpList);
-    ShellExecute(NULL, _T("open"), pathGoZFromApp, NULL, NULL, SW_SHOWDEFAULT);
-    UpdateUndo();
-    RedrawAllScene();
+  }
+
+  void _ExportGoZMergeAll(MQDocument doc, MYCALLBACKOPT *opt, FILE *fpList)
+  {
+    if(doc->GetObjectCount()==0)return;
+    MQObject mo = NULL;
+    for(int i=0; i < doc->GetObjectCount(); i++)
+    {
+      MQObject obj = doc->GetObject(i);
+      if(obj==NULL)continue;
+      if(opt->selectedonly && !obj->GetSelected())continue;
+      if(mo==NULL)
+      {
+        mo = obj->Clone();
+      } else {
+        mo->Merge(obj);
+      }
+    }
+    char chName[201] = {0};
+    mo->GetName(chName, 200);
+    CString strName = chName;
+    strName.Replace('.', '_');
+    strName.Replace(',', '_');
+    strName.Replace('\\', '_');
+    mo->SetName(CW2A(strName));
+    {
+      HRESULT hr = E_FAIL;
+      if(opt->freeze_patch || opt->freeze_mirror || opt->freeze_lathe)
+      {
+        MQObject objFreezed = mo->Clone();
+        DWORD freezeFlag = 0;
+        if(opt->freeze_patch)freezeFlag |= MQOBJECT_FREEZE_PATCH;
+        if(opt->freeze_mirror)freezeFlag |= MQOBJECT_FREEZE_MIRROR;
+        if(opt->freeze_lathe)freezeFlag |= MQOBJECT_FREEZE_LATHE;
+        //if(freezeFlag==7)freezeFlag=MQOBJECT_FREEZE_ALL;
+        objFreezed->Freeze(freezeFlag);
+        hr = ExportObj(doc, objFreezed, strName, opt);
+        objFreezed->DeleteThis();
+      } else 
+        hr = ExportObj(doc, mo, strName, opt);
+      if(FAILED(hr))return;
+    }
+    if(FAILED(CreateZtn(strName)))return;
+    CString pathName = pathGoZProjects + strName;
+    fprintf(fpList, CW2A(pathName+_T("\n")));
   }
 
   HRESULT CreateZtn(CString strName)
