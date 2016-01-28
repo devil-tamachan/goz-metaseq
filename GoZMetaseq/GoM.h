@@ -299,6 +299,13 @@ public:
           ATLASSERT(arrVColor.GetCount()==numVert);
           for(int i=0; i<obj->GetFaceCount(); i++)
           {
+            int fmidx = obj->GetFaceMaterial(i);
+            if(fmidx==-1)
+            {
+              fmidx = doc->GetCurrentMaterialIndex();
+              if(fmidx!=-1)obj->SetFaceMaterial(i, fmidx);
+            }
+            if(fmidx!=-1)doc->GetMaterial(fmidx)->SetVertexColor(MQMATERIAL_VERTEXCOLOR_DIFFUSE);
             int vCount = obj->GetFacePointCount(i);
             if(vCount >= 3)
             {
@@ -306,7 +313,7 @@ public:
               obj->GetFacePointArray(i, vertexIndex);
               for(int j=0; j<vCount; j++)
               {
-                obj->SetFaceVertexColor(i, j, rgba);
+                obj->SetFaceVertexColor(i, j, arrVColor[vertexIndex[j]]);
               }
               delete [] vertexIndex;
             }
