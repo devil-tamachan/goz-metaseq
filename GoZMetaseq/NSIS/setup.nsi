@@ -7,7 +7,7 @@ RequestExecutionLevel admin
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "GoZMetaseq"
-!define PRODUCT_VERSION "1.0.4"
+!define PRODUCT_VERSION "1.0.5"
 !define PRODUCT_PUBLISHER "devil.tamachan@gmail.com"
 !define PRODUCT_WEB_SITE "http://code.google.com/p/goz-metaseq/"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_NAME}"
