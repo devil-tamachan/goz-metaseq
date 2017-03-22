@@ -12,7 +12,9 @@
 #define IDC_FREEZE_MIRROR               1003
 #define IDC_MERGEMAT                    1004
 #define IDC_FREEZE_LATHE                1005
-#define IDC_SELECTEDONLY                1006
+#define IDR_SELECTEDONLY                1010
+#define IDR_VISIBLEONLY                 1011
+#define IDR_ALLEXPORT                    1012
 #define IDC_EXPORT_MERGEOBJ             1007
 
 // Next default values for new objects
@@ -21,7 +23,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        201
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1008
+#define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

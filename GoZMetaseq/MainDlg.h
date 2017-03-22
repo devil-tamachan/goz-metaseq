@@ -50,7 +50,9 @@ public:
     DDX_CHECK(IDC_FREEZE_PATCH, m_freeze_patch)
     DDX_CHECK(IDC_FREEZE_MIRROR, m_freeze_mirror)
     DDX_CHECK(IDC_FREEZE_LATHE, m_freeze_lathe)
-    DDX_CHECK(IDC_SELECTEDONLY, m_selectedonly)
+    DDX_RADIO(IDR_SELECTEDONLY, m_exportfilter)
+    //DDX_RADIO(IDR_VISIBLEONLY, m_visibleonly)
+    //DDX_RADIO(IDR_ALLEXPORT, m_allexport)
     DDX_CHECK(IDC_EXPORT_MERGEOBJ, m_export_mergeObj)
     DDX_CHECK(IDC_MERGEMAT, m_mergeMat)
   END_DDX_MAP()
@@ -58,7 +60,7 @@ public:
   bool m_freeze_patch;
   bool m_freeze_mirror;
   bool m_freeze_lathe;
-  bool m_selectedonly;
+  int m_exportfilter;
   bool m_export_mergeObj;
   bool m_mergeMat;
 
@@ -69,7 +71,7 @@ public:
 
   GoM *m_plugin;
 
-  CMainDlg(GoM *plugin) : m_freeze_patch(true), m_freeze_mirror(true), m_freeze_lathe(true), m_selectedonly(false), m_export_mergeObj(true), m_mergeMat(true)
+  CMainDlg(GoM *plugin) : m_freeze_patch(true), m_freeze_mirror(true), m_freeze_lathe(true), m_exportfilter(1), m_export_mergeObj(true), m_mergeMat(true)
   {
     m_plugin = plugin;
   }

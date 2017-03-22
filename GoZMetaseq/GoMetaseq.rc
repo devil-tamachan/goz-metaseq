@@ -24,7 +24,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 // Dialog
 //
 
-IDD_MAINDLG DIALOGEX 0, 0, 216, 133
+IDD_MAINDLG DIALOGEX 0, 0, 216, 152
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
 CAPTION "GoMetaseq"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -35,11 +35,13 @@ BEGIN
     CONTROL         "鏡面",IDC_FREEZE_MIRROR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,60,69,32,10
     GROUPBOX        "フリーズ",IDC_STATIC,14,58,83,38
     CONTROL         "Merge materials",IDC_MERGEMAT,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,125,69,67,10
-    GROUPBOX        "出力",IDC_STATIC,7,7,96,119
-    GROUPBOX        "入力",IDC_STATIC,109,7,100,119
+    GROUPBOX        "出力",IDC_STATIC,7,7,96,138
+    GROUPBOX        "入力",IDC_STATIC,109,7,100,138
     CONTROL         "回転体",IDC_FREEZE_LATHE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,81,40,10
-    CONTROL         "選択中のみ出力",IDC_SELECTEDONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,100,70,10
-    CONTROL         "１つに合成",IDC_EXPORT_MERGEOBJ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,112,49,10
+    CONTROL         "選択中のみ出力",IDR_SELECTEDONLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,17,100,70,10
+    CONTROL         "表示中のみ出力",IDR_VISIBLEONLY,"Button",BS_AUTORADIOBUTTON,17,112,70,10
+    CONTROL         "すべて出力",IDR_ALLEXPORT,"Button",BS_AUTORADIOBUTTON,17,123,51,10
+    CONTROL         "１つに合成",IDC_EXPORT_MERGEOBJ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,135,49,10
 END
 
 
@@ -56,7 +58,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 209
         TOPMARGIN, 7
-        BOTTOMMARGIN, 126
+        BOTTOMMARGIN, 145
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -71,6 +73,70 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG 0, 0, 187, 102
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,81,50,14
+    CTEXT           "GoMetaseq Application v1.0\n\n(c) Copyright 2014",IDC_STATIC,25,57,78,32
+    ICON            IDR_MAINFRAME,IDC_STATIC,55,26,18,20
+    GROUPBOX        "",IDC_STATIC,7,7,115,88
+END
+
+IDD_MAINDLG DIALOGEX 0, 0, 216, 152
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "GoMetaseq"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    PUSHBUTTON      "OUT\nMetaseq >>> ZBrush",IDB_GOZBRUSH,14,17,80,37,BS_MULTILINE
+    PUSHBUTTON      "IN\nZBrush >>> Metaseq",IDB_GOMETASEQ,119,17,83,37,BS_MULTILINE
+    CONTROL         "Patch",IDC_FREEZE_PATCH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,69,34,10
+    CONTROL         "Mirror",IDC_FREEZE_MIRROR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,60,69,35,10
+    GROUPBOX        "Freeze",IDC_STATIC,14,58,83,38
+    CONTROL         "Merge materials",IDC_MERGEMAT,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,125,69,67,10
+    GROUPBOX        "Export",IDC_STATIC,7,7,96,138
+    GROUPBOX        "Import",IDC_STATIC,109,7,100,138
+    CONTROL         "Lathe",IDC_FREEZE_LATHE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,81,34,10
+    CONTROL         "Selected Obj Only",IDR_SELECTEDONLY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,17,100,73,10
+    CONTROL         "Visible Obj Only",IDR_VISIBLEONLY,"Button",BS_AUTORADIOBUTTON,17,112,73,10
+    CONTROL         "All",IDR_ALLEXPORT,"Button",BS_AUTORADIOBUTTON,17,123,51,10
+    CONTROL         "Merge objects",IDC_EXPORT_MERGEOBJ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,135,61,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 95
+    END
+
+    IDD_MAINDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 209
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 145
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -105,68 +171,6 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\GoMetaseq.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Dialog
-//
-
-IDD_ABOUTBOX DIALOG 0, 0, 187, 102
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,130,81,50,14
-    CTEXT           "GoMetaseq Application v1.0\n\n(c) Copyright 2014",IDC_STATIC,25,57,78,32
-    ICON            IDR_MAINFRAME,IDC_STATIC,55,26,18,20
-    GROUPBOX        "",IDC_STATIC,7,7,115,88
-END
-
-IDD_MAINDLG DIALOGEX 0, 0, 216, 133
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
-CAPTION "GoMetaseq"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON      "OUT\nMetaseq >>> ZBrush",IDB_GOZBRUSH,14,17,80,37,BS_MULTILINE
-    PUSHBUTTON      "IN\nZBrush >>> Metaseq",IDB_GOMETASEQ,119,17,83,37,BS_MULTILINE
-    CONTROL         "Patch",IDC_FREEZE_PATCH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,69,34,10
-    CONTROL         "Mirror",IDC_FREEZE_MIRROR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,60,69,35,10
-    GROUPBOX        "Freeze",IDC_STATIC,14,58,83,38
-    CONTROL         "Merge materials",IDC_MERGEMAT,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,125,69,67,10
-    GROUPBOX        "Export",IDC_STATIC,7,7,96,119
-    GROUPBOX        "Import",IDC_STATIC,109,7,100,119
-    CONTROL         "Lathe",IDC_FREEZE_LATHE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,81,34,10
-    CONTROL         "Selected Obj Only",IDC_SELECTEDONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,100,73,10
-    CONTROL         "Merge objects",IDC_EXPORT_MERGEOBJ,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,112,61,10
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// DESIGNINFO
-//
-
-#ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
-BEGIN
-    IDD_ABOUTBOX, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 180
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 95
-    END
-
-    IDD_MAINDLG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 209
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 126
-    END
-END
-#endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //

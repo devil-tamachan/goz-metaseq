@@ -84,6 +84,7 @@ public:
       for(int i=numMat-1;i>=0;i--)
       {
         MQMaterial mat = doc->GetMaterial(i);
+        if(mat==NULL)continue;
         WORD crc16 = CalcCRC16(mat);
         m_matCrcList.SetAt(crc16, mat->GetUniqueID());
       }
@@ -96,6 +97,7 @@ public:
     for(int i=0;i<numMat;i++)
     {
       MQMaterial mat = doc->GetMaterial(i);
+      if(mat==NULL)continue;
       if(mat->GetUniqueID()==uniqid)return i;
     }
     return 0;//Err
@@ -305,7 +307,11 @@ public:
               fmidx = doc->GetCurrentMaterialIndex();
               if(fmidx!=-1)obj->SetFaceMaterial(i, fmidx);
             }
-            if(fmidx!=-1)doc->GetMaterial(fmidx)->SetVertexColor(MQMATERIAL_VERTEXCOLOR_DIFFUSE);
+            if(fmidx!=-1)
+            {
+              MQMaterial fmat = doc->GetMaterial(fmidx);
+              if(fmat!=NULL)fmat->SetVertexColor(MQMATERIAL_VERTEXCOLOR_DIFFUSE);
+            }
             int vCount = obj->GetFacePointCount(i);
             if(vCount >= 3)
             {
@@ -388,7 +394,8 @@ IOB_Err1:
     {
       MQObject obj = doc->GetObject(i);
       if(obj==NULL)continue;
-      if(opt->selectedonly && !obj->GetSelected())continue;
+      if(opt->exportfilter==0/*SELECTED OBJ ONLY*/ && !obj->GetSelected())continue;
+      if(opt->exportfilter==1/*VISIBLE OBJ ONLY*/ && !obj->GetVisible())continue;
       char chName[201] = {0};
       obj->GetName(chName, 200);
       CString strName = chName;
@@ -427,7 +434,8 @@ IOB_Err1:
     {
       MQObject obj = doc->GetObject(i);
       if(obj==NULL)continue;
-      if(opt->selectedonly && !obj->GetSelected())continue;
+      if(opt->exportfilter==0/*SELECTED OBJ ONLY*/ && !obj->GetSelected())continue;
+      if(opt->exportfilter==1/*VISIBLE OBJ ONLY*/ && !obj->GetVisible())continue;
       if(mo==NULL)
       {
         mo = obj->Clone();
@@ -586,6 +594,7 @@ IOB_Err1:
           for(int j=0;j<numFace;j++)WRITEW(NOMAT);
         } else {
           MQMaterial mat = doc->GetMaterial(iMat);
+          ATLASSERT(mat!=NULL);
           for(int j=0;j<numFace;j++)WRITEW(CalcCRC16(mat));
         }
       }
